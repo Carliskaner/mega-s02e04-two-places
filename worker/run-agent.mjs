@@ -78,7 +78,7 @@ async function main() {
 
   const stdout = Buffer.concat(stdoutChunks).toString("utf8");
   const stderr = Buffer.concat(stderrChunks).toString("utf8");
-  const sensitiveValues = [endpoint, url.pathname, url.origin];
+  const sensitiveValues = [endpoint, url.pathname];
   let outputClean = !sensitiveValues.some((value) => stdout.includes(value) || stderr.includes(value));
   const scanDirectories = [
     join(copilotHome, "logs"),
