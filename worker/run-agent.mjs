@@ -45,16 +45,19 @@ async function main() {
   delete process.env.MEGA_JOB_MCP_URL;
   const argumentsList = [
     "--model=gpt-6-luna",
-    "--max-ai-credits=25",
+    "--max-ai-credits=30",
     "--output-format=json",
     "--log-level=none",
     `--log-dir=${join(runnerTemp, "copilot-logs")}`,
     "--disable-builtin-mcps",
     "--enable-mcp-server=course-job",
     "--secret-env-vars=COPILOT_GITHUB_TOKEN",
-    "--available-tools=course-job(*)",
-    "--allow-tool=course-job(*)",
-    "--prompt=Read the official skill resource skill://voice-to-memo/SKILL.md, follow it exactly, and perform only job 2. Do not delegate. Do not reveal credentials or endpoint data in your response.",
+    "--available-tools=course-job-transcribe",
+    "--available-tools=course-job-memo_write",
+    "--available-tools=course-job-memo_search",
+    "--available-tools=course-job-submit",
+    "--allow-tool=course-job",
+    "--prompt=Perform only job 2 using the verified voice-to-memo v1 contract; do not try to read the skill URI. Call transcribe on the supplied clip. Write one memo per fault, freeze/stall, hold, or reset occurrence in the format <what happened> @m:ss, using the clip offset; talk around an event is not a finding. Call memo_search with no query, confirm every finding and offset is present, fill gaps, then search again. Submit exactly the notes, one per line, with skillVersion: 1. Pass each step token to the next tool except transcribe. Preserve spoken times separately from clip offsets. Do not retry an ambiguous submit. Do not delegate or reveal credentials or endpoint data.",
   ];
 
   const stdoutChunks = [];
