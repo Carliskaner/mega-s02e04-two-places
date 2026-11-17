@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFile, readdir, rm } from "node:fs/promises";
+import { readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const endpoint = process.env.MEGA_JOB_MCP_URL;
@@ -93,11 +93,25 @@ async function main() {
   }
 
   const resultExists = await readFile(resultPath).then(() => true).catch(() => false);
+  let diagnosticCaptured = false;
+  if (!resultExists) {
+    const diagnostic = {
+      type: "worker_diagnostic",
+      process_exit: exitCode,
+      spawn_error: childError,
+      endpoint_scan: outputClean ? "clean" : "failed",
+      result_capture: "absent",
+      submit_accepted: "unknown",
+      ...(outputClean ? { stdout, stderr } : {}),
+    };
+    await writeFile(resultPath, JSON.stringify(diagnostic), { encoding: "utf8", flag: "wx", mode: 0o600 });
+    diagnosticCaptured = true;
+  }
   process.env.MEGA_JOB_MCP_URL = "";
   stdoutChunks.length = 0;
   stderrChunks.length = 0;
   const complete = !childError && exitCode === 0 && outputClean && resultExists;
-  process.stdout.write(`worker_status=${complete ? "complete" : "failed"};endpoint_scan=${outputClean ? "clean" : "failed"}\n`);
+  process.stdout.write(`worker_status=${complete ? "complete" : "failed"};endpoint_scan=${outputClean ? "clean" : "failed"};diagnostic_capture=${diagnosticCaptured ? "encrypted" : "not_needed"}\n`);
   if (!complete) process.exitCode = 1;
 }
 
